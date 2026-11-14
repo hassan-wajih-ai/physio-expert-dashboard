@@ -118,10 +118,16 @@
             <span id="sync-status-text">متصل بالسيرفر والبيانات</span>
           </div>
 
-          <!-- زر مزامنة البيانات -->
-          <button id="btn-sync" onclick="syncWithGoogleSheet()" class="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-colors border border-slate-300">
+          <!-- زر فتح شيت جوجل المباشر -->
+          <a href="https://docs.google.com/spreadsheets/d/1F3s_nbFmXNb6MrfXmXXcFAgkkKrQ6YfSRhKmXJpJHX0/edit?gid=0" target="_blank" rel="noopener noreferrer" title="فتح شيت جوجل للحجوزات مباشرة" class="p-2 sm:px-3 sm:py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center gap-1.5 transition-colors border border-emerald-300">
+            <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 7h10v2H7zm0 4h10v2H7zm0 4h7v2H7z"/></svg>
+            <span class="hidden sm:inline">شيت جوجل 📊</span>
+          </a>
+
+          <!-- زر مزامنة البيانات الحية -->
+          <button id="btn-sync" onclick="syncWithGoogleSheet()" title="تحديث وسحب الحجوزات الحية من شيت جوجل" class="p-2 sm:px-3 sm:py-2 rounded-xl bg-cyan-50 hover:bg-cyan-100 text-cyan-800 font-bold text-xs flex items-center gap-1.5 transition-colors border border-cyan-300">
             <svg id="sync-icon" class="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            <span class="hidden sm:inline">مزامنة</span>
+            <span class="hidden sm:inline">مزامنة الشيت</span>
           </button>
 
           <!-- زر طباعة التقرير PDF -->
@@ -166,14 +172,14 @@
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
     
     <!-- 1. بطاقات المؤشرات الرئيسية (KPI Cards) -->
-    <section class="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
       
       <!-- إجمالي الحجوزات -->
       <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
         <div>
           <p class="text-xs font-bold text-slate-500">إجمالي الحجوزات</p>
           <h3 id="stat-total" class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">0</h3>
-          <span class="text-[11px] text-cyan-600 font-semibold">جميع الحالات المسجلة</span>
+          <span class="text-[11px] text-cyan-600 font-semibold">جميع الحالات بالشيت</span>
         </div>
         <div class="w-12 h-12 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center font-bold text-xl">
           📋
@@ -216,12 +222,48 @@
         </div>
       </div>
 
+      <!-- إجمالي الإيرادات -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-slate-500">إجمالي الإيرادات</p>
+          <h3 id="stat-revenue" class="text-xl sm:text-2xl font-extrabold text-teal-600 mt-1">0 ج.م</h3>
+          <span class="text-[11px] text-teal-600 font-semibold">الكاش + التعاقدات</span>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center font-bold text-xl">
+          💰
+        </div>
+      </div>
+
+      <!-- إيراد الكاش (النقدي) -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-slate-500">إيراد الكاش (النقدي)</p>
+          <h3 id="stat-cash" class="text-xl sm:text-2xl font-extrabold text-emerald-700 mt-1">0 ج.م</h3>
+          <span class="text-[11px] text-emerald-600 font-semibold">تحصيل الخزينة</span>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xl">
+          💵
+        </div>
+      </div>
+
+      <!-- إيراد التعاقدات -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-slate-500">إيراد التعاقدات</p>
+          <h3 id="stat-contract" class="text-xl sm:text-2xl font-extrabold text-indigo-600 mt-1">0 ج.م</h3>
+          <span class="text-[11px] text-indigo-600 font-semibold">شركات وهيئات</span>
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xl">
+          📑
+        </div>
+      </div>
+
       <!-- نسبة إشغال الغرف والجيم -->
-      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between col-span-2 lg:col-span-1">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
         <div>
           <p class="text-xs font-bold text-slate-500">إشغال الغرف والمركز</p>
-          <h3 id="stat-occupancy" class="text-2xl sm:text-3xl font-extrabold text-purple-600 mt-1">0%</h3>
-          <span class="text-[11px] text-purple-600 font-semibold">18 غرفة + الجيم</span>
+          <h3 id="stat-occupancy" class="text-xl sm:text-2xl font-extrabold text-purple-600 mt-1">0%</h3>
+          <span class="text-[11px] text-purple-600 font-semibold">18 سرير + صالة الجيم</span>
         </div>
         <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-xl">
           🏥
@@ -270,8 +312,8 @@
           <svg class="w-4 h-4 text-slate-400 absolute right-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         </div>
 
-        <!-- فلاتر التخصص والحالة والطبيب -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full md:w-auto">
+        <!-- فلاتر التخصص والحالة والطبيب والدفع -->
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 w-full md:w-auto">
           
           <!-- فلتر الحالة -->
           <select id="filter-status" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-cyan-600">
@@ -302,8 +344,15 @@
             <option value="أي طبيب متاح حسب التخصص">أي طبيب متاح</option>
           </select>
 
+          <!-- فلتر طريقة الدفع -->
+          <select id="filter-payment" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-cyan-600">
+            <option value="all">جميع طرق الدفع</option>
+            <option value="كاش">كاش (نقدي)</option>
+            <option value="تعاقد">تعاقد / تأمين</option>
+          </select>
+
           <!-- زر إعادة الضبط -->
-          <button onclick="resetFilters()" class="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors border border-slate-300">
+          <button onclick="resetFilters()" class="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors border border-slate-300 col-span-2 sm:col-span-1">
             إعادة ضبط
           </button>
 
@@ -338,6 +387,7 @@
               <th class="p-3.5">الطبيب</th>
               <th class="p-3.5">المكان / الغرفة</th>
               <th class="p-3.5">موعد الزيارة</th>
+              <th class="p-3.5 text-center">سعر الجلسة</th>
               <th class="p-3.5 text-center">الحالة</th>
               <th class="p-3.5 text-center no-print">الإجراءات</th>
             </tr>
@@ -423,6 +473,20 @@
           </div>
         </div>
 
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">سعر الجلسة (ج.م) *</label>
+            <input type="number" id="new-price" min="0" step="50" required placeholder="مثال: 400" value="400" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-mono font-bold focus:outline-none focus:border-cyan-600">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">طريقة الدفع *</label>
+            <select id="new-payment-status" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-bold focus:outline-none focus:border-cyan-600">
+              <option value="كاش">كاش (نقدي بالمركز)</option>
+              <option value="تعاقد">تعاقد / شركات وتأمين</option>
+            </select>
+          </div>
+        </div>
+
         <div>
           <label class="block font-bold text-slate-700 mb-1">ملاحظات الحالة والأعراض</label>
           <textarea id="new-notes" rows="2" placeholder="وصف للأعراض، تاريخ العملية السابقة..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-cyan-600"></textarea>
@@ -472,6 +536,14 @@
           <span class="text-slate-500 block">تاريخ الموعد:</span>
           <span id="detail-date" class="font-bold text-slate-900"></span>
         </div>
+        <div class="p-3 bg-slate-50 rounded-xl">
+          <span class="text-slate-500 block">سعر الجلسة:</span>
+          <span id="detail-price" class="font-bold text-teal-600 font-mono"></span>
+        </div>
+        <div class="p-3 bg-slate-50 rounded-xl">
+          <span class="text-slate-500 block">حالة الدفع:</span>
+          <span id="detail-payment" class="font-bold text-slate-900"></span>
+        </div>
       </div>
 
       <div class="p-3 bg-slate-50 rounded-xl text-xs">
@@ -503,90 +575,122 @@
 
   <!-- بيانات وسكريبتات لوحة التحكم التفاعلية -->
   <script>
-    // رابط جوجل شيت للمزامنة
+    // روابط الاتصال والربط مع جوجل شيت
     const scriptURL = "https://script.google.com/macros/s/AKfycbyxyuM3Y-Q6T5R_qCwaB1BUfwLVQ23bJy2Bge3WTNzDVE7_hNOwWndUaxU8mg2RVGcX/exec";
+    const googleSheetId = "1F3s_nbFmXNb6MrfXmXXcFAgkkKrQ6YfSRhKmXJpJHX0";
+    const googleSheetViewURL = "https://docs.google.com/spreadsheets/d/" + googleSheetId + "/edit?gid=0";
 
-    // البيانات الافتراضية الأولية للحجوزات
+    // البيانات الافتراضية الأولية المطابقة لأحدث تعديلات شيت جوجل
     const initialBookings = [
       {
-        id: "PE-2026-1042",
-        name: "محمد عبد الله إبراهيم",
-        phone: "01004567891",
+        id: "PE-2026-2529",
+        name: "حسن وجيه",
+        phone: "01000920201",
         specialty: "إصابات الملاعب والتأهيل الرياضي",
         doctor: "د. مؤمن البحيري",
         location: "صالة الجيم للتأهيل الطبي والرياضي",
-        date: "2026-11-13",
-        notes: "تأهيل ما بعد تمزق جزئي في الرباط الصليبي (ACL)، تدريبات اتزان وأجهزة تقوية.",
+        date: "2026-11-14",
+        price: 400,
+        payment: "تعاقد",
+        notes: "حجز مسجل من الموقع الرسمي - وارد تلقائياً",
+        status: "pending",
+        followups: [{ date: "2026-11-13", note: "تسجيل الموعد بنجاح عبر شيت جوجل." }]
+      },
+      {
+        id: "PE-2025-001",
+        name: "أحمد محمود السكندري",
+        phone: "01012345678",
+        specialty: "إصابات الملاعب والتأهيل الرياضي",
+        doctor: "د. مؤمن البحيري",
+        location: "صالة الجيم للتأهيل الطبي والرياضي",
+        date: "2025-05-12",
+        price: 400,
+        payment: "كاش",
+        notes: "برنامج تأهيل تمزق الرباط الصليبي (ACL) وتقوية عضلية",
         status: "confirmed",
         followups: [
-          { date: "2026-11-10", note: "جلسة تقييم أولي: مدى الحركة 110 درجات، لا يوجد ارتشاح حاد." },
-          { date: "2026-11-12", note: "جلسة تيكار + تقوية عضلات الفخذ الرباعية." }
+          { date: "2025-05-10", note: "تم تأكيد الموعد وتجهيز برنامج التأهيل الحركي." }
         ]
       },
       {
-        id: "PE-2026-2187",
-        name: "سارة محمود السيد",
-        phone: "01123456780",
+        id: "PE-2025-002",
+        name: "سارة إبراهيم خليل",
+        phone: "01223456789",
+        specialty: "التأهيل ما بعد العمليات الجراحية",
+        doctor: "د. مؤمن البحيري",
+        location: "غرفة منفردة 3",
+        date: "2025-05-13",
+        price: 500,
+        payment: "تعاقد",
+        notes: "متابعة ما بعد استبدال مفصل الركبة وتصريف الوذمات",
+        status: "confirmed",
+        followups: [
+          { date: "2025-05-10", note: "تجهيز الغرفة 03 ومتابعة تعليمات الجراحة." }
+        ]
+      },
+      {
+        id: "PE-2025-003",
+        name: "مريم عبد الرحمن",
+        phone: "01134567890",
         specialty: "التورم الليمفاوي والوذمة الشحمية",
         doctor: "د. بسمة عبد المطلب",
         location: "غرفة منفردة 4",
-        date: "2026-11-13",
-        notes: "وذمة ليمفاوية في الذراع الأيمن بعد جراحة استئصال، تحتاج تصريف ليمفاوي يدوي وجهاز ضغط هوائي.",
+        date: "2025-05-14",
+        price: 450,
+        payment: "كاش",
+        notes: "جلسة تصريف ليمفاوي يدوي وتطبيق الضمادات الضاغطة",
         status: "pending",
-        followups: []
+        followups: [
+          { date: "2025-05-11", note: "تم تعديل الموعد بناءً على طلب المريضة وتأكيد الطبيبة." }
+        ]
       },
       {
-        id: "PE-2026-3409",
-        name: "ياسين أحمد فؤاد",
-        phone: "01287654321",
+        id: "PE-2025-004",
+        name: "يوسف تامر حسن",
+        phone: "01545678901",
+        specialty: "انحراف العمود الفقري والجنف",
+        doctor: "د. بسمة عبد المطلب",
+        location: "غرفة منفردة 12",
+        date: "2025-05-14",
+        price: 400,
+        payment: "تعاقد",
+        notes: "تقويم اعوجاج العمود الفقري (سكوليوز) وتمارين شروث",
+        status: "confirmed",
+        followups: [
+          { date: "2025-05-11", note: "تأكيد حجز غرفة 12 لتمارين تقويم اعوجاج العمود الفقري." }
+        ]
+      },
+      {
+        id: "PE-2025-005",
+        name: "عمر خالد المنشاوي",
+        phone: "01056789012",
         specialty: "حالات الضمور العضلي للأطفال",
         doctor: "د. مي فريد",
         location: "غرفة منفردة 2",
-        date: "2026-11-14",
-        notes: "تأهيل تأخر نمو حركي مع ضعف توتر عضلي، استخدام التحفيز والممرات الحسية.",
-        status: "confirmed",
-        followups: [
-          { date: "2026-11-08", note: "تحسن في الجلوس المستقل لمدة 5 دقائق متواصلة." }
-        ]
-      },
-      {
-        id: "PE-2026-4551",
-        name: "طارق حسام الدين",
-        phone: "01099887766",
-        specialty: "التأهيل ما بعد العمليات الجراحية",
-        doctor: "د. مؤمن البحيري",
-        location: "غرفة منفردة 7",
-        date: "2026-11-14",
-        notes: "استبدال مفصل ركبة صناعي منذ 3 أسابيع، تدريب على المشي واستعادة ثني الركبة بجهاز CPM.",
+        date: "2025-05-15",
+        price: 350,
+        payment: "كاش",
+        notes: "تحفيز عصبي عضلي وتدريب توازن ومشي حركي للأطفال",
         status: "completed",
         followups: [
-          { date: "2026-11-05", note: "الجلسة الأولى: استخدام جهاز الحركة السلبية CPM." },
-          { date: "2026-11-11", note: "المريض يمشي بعكاز واحد مع استقرار كامل." }
+          { date: "2025-05-12", note: "تمت الجلسة بنجاح وتحديد جلسة التأهيل القادمة." }
         ]
       },
       {
-        id: "PE-2026-5120",
-        name: "نوران خالد عثمان",
-        phone: "01551234987",
-        specialty: "تأهيل عضلات الحوض وقاع الحوض",
-        doctor: "د. بسمة عبد المطلب",
-        location: "غرفة منفردة 12",
-        date: "2026-11-15",
-        notes: "ضعف عضلات قاع الحوض ما بعد الولادة، جلسات بيوفيدباك وتحفيز كهرومغناطيسي داخل جناح VIP.",
-        status: "confirmed",
-        followups: []
-      },
-      {
-        id: "PE-2026-6234",
-        name: "عمر شريف الدسوقي",
-        phone: "01011223344",
-        specialty: "انحراف العمود الفقري والجنف",
+        id: "PE-2026-TEST",
+        name: "أحمد حسن (حجز تجريبي)",
+        phone: "01000402463",
+        specialty: "إصابات الملاعب والتأهيل الرياضي",
         doctor: "د. مؤمن البحيري",
-        location: "غرفة منفردة 5",
-        date: "2026-11-15",
-        notes: "جنف صدري قطني 18 درجة، تمارين شروث (Schroth) ثلاثية الأبعاد لتعديل القوام.",
+        location: "صالة الجيم للتأهيل الطبي والرياضي",
+        date: "2026-10-30",
+        price: 400,
+        payment: "كاش",
+        notes: "تجربة ربط الموقع وإشعار الواتساب التلقائي - جهاز التيكار",
         status: "pending",
-        followups: []
+        followups: [
+          { date: "2026-10-29", note: "تجربة حجز ناجحة مع ربط الواتساب والشيت." }
+        ]
       }
     ];
 
@@ -596,6 +700,11 @@
       const stored = localStorage.getItem('physio_expert_bookings');
       if (stored) {
         bookings = JSON.parse(stored);
+        bookings = bookings.map(b => ({
+          ...b,
+          price: (b.price !== undefined && b.price !== null) ? Number(b.price) : 400,
+          payment: b.payment || 'كاش'
+        }));
       } else {
         bookings = initialBookings;
         localStorage.setItem('physio_expert_bookings', JSON.stringify(bookings));
@@ -637,11 +746,16 @@
       initCharts();
       renderDashboard();
 
+      // مزامنة حية أولية مع شيت جوجل تلقائياً
+      syncWithGoogleSheet();
+
       // أحداث التصفية والبحث
       document.getElementById('search-input').addEventListener('input', renderTable);
       document.getElementById('filter-status').addEventListener('change', renderTable);
       document.getElementById('filter-specialty').addEventListener('change', renderTable);
       document.getElementById('filter-doctor').addEventListener('change', renderTable);
+      const filterPay = document.getElementById('filter-payment');
+      if (filterPay) filterPay.addEventListener('change', renderTable);
     });
 
     // تحديث كافة أجزاء الداشبورد
@@ -651,7 +765,7 @@
       updateCharts();
     }
 
-    // 1. حساب وتحديث بطاقات المؤشرات (KPIs)
+    // 1. حساب وتحديث بطاقات المؤشرات (KPIs) بما فيها السعر والإيرادات والكاش والتعاقدات
     function updateKPICards() {
       const total = bookings.length;
       const confirmed = bookings.filter(b => b.status === 'confirmed').length;
@@ -663,7 +777,33 @@
       document.getElementById('stat-pending').textContent = pending;
       document.getElementById('stat-completed').textContent = completed;
 
-      // نسبة إشغال تقريبية (على أساس 18 غرفة + صالة الجيم)
+      // حساب الإيرادات الإجمالية، ونقدي (كاش)، وتعاقد
+      let totalRevenue = 0;
+      let cashRevenue = 0;
+      let contractRevenue = 0;
+
+      bookings.forEach(b => {
+        const p = Number(b.price) || 0;
+        totalRevenue += p;
+        const pay = String(b.payment || '').toLowerCase();
+        if (pay.includes('كاش') || pay.includes('نقدي')) {
+          cashRevenue += p;
+        } else if (pay.includes('تعاقد') || pay.includes('تأمين')) {
+          contractRevenue += p;
+        } else {
+          cashRevenue += p;
+        }
+      });
+
+      const statRev = document.getElementById('stat-revenue');
+      const statCash = document.getElementById('stat-cash');
+      const statContract = document.getElementById('stat-contract');
+
+      if (statRev) statRev.textContent = totalRevenue.toLocaleString('ar-EG') + ' ج.م';
+      if (statCash) statCash.textContent = cashRevenue.toLocaleString('ar-EG') + ' ج.م';
+      if (statContract) statContract.textContent = contractRevenue.toLocaleString('ar-EG') + ' ج.م';
+
+      // نسبة إشغال تقريبية (على أساس 18 سرير + صالة الجيم)
       const activeSessions = confirmed + completed;
       const occupancyRate = Math.min(Math.round((activeSessions / 19) * 100), 100);
       document.getElementById('stat-occupancy').textContent = occupancyRate + '%';
@@ -675,6 +815,8 @@
       const statusFilter = document.getElementById('filter-status').value;
       const specialtyFilter = document.getElementById('filter-specialty').value;
       const doctorFilter = document.getElementById('filter-doctor').value;
+      const paymentFilterEl = document.getElementById('filter-payment');
+      const paymentFilter = paymentFilterEl ? paymentFilterEl.value : 'all';
 
       const filtered = bookings.filter(item => {
         const matchesSearch = 
@@ -685,8 +827,9 @@
         const matchesStatus = (statusFilter === 'all') || (item.status === statusFilter);
         const matchesSpecialty = (specialtyFilter === 'all') || (item.specialty === specialtyFilter);
         const matchesDoctor = (doctorFilter === 'all') || (item.doctor.includes(doctorFilter));
+        const matchesPayment = (paymentFilter === 'all') || (item.payment && item.payment.includes(paymentFilter));
 
-        return matchesSearch && matchesStatus && matchesSpecialty && matchesDoctor;
+        return matchesSearch && matchesStatus && matchesSpecialty && matchesDoctor && matchesPayment;
       });
 
       const tbody = document.getElementById('bookings-table-body');
@@ -708,6 +851,8 @@
         const waMsg = encodeURIComponent(`مرحباً أستاذ/ة ${item.name}، نتواصل معك من مركز فيزيو إكسبيرت بالإسكندرية بخصوص موعد جلستك الطبية كود: ${item.id} بتاريخ ${item.date}.`);
         const waLink = `https://wa.me/20${item.phone.replace(/^0+/, '')}?text=${waMsg}`;
 
+        const isCash = !item.payment || item.payment.includes('كاش');
+
         return `
           <tr class="hover:bg-slate-50/80 transition-colors">
             <td class="p-3.5 font-mono font-bold text-cyan-700">${item.id}</td>
@@ -724,6 +869,14 @@
             <td class="p-3.5 text-slate-700">${item.doctor}</td>
             <td class="p-3.5 text-slate-600">${item.location}</td>
             <td class="p-3.5 font-mono text-slate-700">${item.date}</td>
+            <td class="p-3.5 text-center">
+              <span class="inline-block px-2.5 py-0.5 rounded-md bg-teal-50 text-teal-800 font-mono font-bold border border-teal-200">
+                ${item.price ? Number(item.price).toLocaleString('ar-EG') + ' ج.م' : '—'}
+              </span>
+              <div class="text-[11px] font-bold mt-1 ${isCash ? 'text-emerald-700' : 'text-indigo-700'}">
+                ${isCash ? '💵 كاش' : '📑 تعاقد'}
+              </div>
+            </td>
             <td class="p-3.5 text-center">${statusBadge}</td>
             <td class="p-3.5 text-center no-print">
               <div class="flex items-center justify-center gap-1.5">
@@ -864,6 +1017,8 @@
         doctor: document.getElementById('new-doctor').value,
         location: document.getElementById('new-location').value,
         date: document.getElementById('new-date').value,
+        price: Number(document.getElementById('new-price').value) || 400,
+        payment: document.getElementById('new-payment-status').value || "كاش",
         notes: document.getElementById('new-notes').value.trim() || "لا توجد ملاحظات",
         status: "confirmed",
         followups: [{ date: new Date().toISOString().split('T')[0], note: "تم إنشاء الحجز يدوياً من لوحة الإدارة." }]
@@ -874,7 +1029,7 @@
       closeModal('modal-new-booking');
       document.getElementById('form-new-booking').reset();
 
-      // محاولة إرسال الحجز لشيت جوجل أيضاً
+      // إرسال الحجز لشيت جوجل مع السعر وطريقة الدفع
       try {
         fetch(scriptURL, {
           method: "POST",
@@ -886,12 +1041,14 @@
             doctor: newBooking.doctor,
             appointmentDate: newBooking.date,
             location: newBooking.location,
-            notes: newBooking.notes
+            notes: newBooking.notes,
+            price: newBooking.price,
+            payment: newBooking.payment
           })
         });
       } catch (err) {}
 
-      alert("تم تسجيل الحجز بنجاح بكود: " + newId);
+      alert("تم تسجيل الحجز بنجاح بكود: " + newId + " وتمت إضافته للوحة والشيت!");
     }
 
     function toggleBookingStatus(id) {
@@ -926,6 +1083,12 @@
       document.getElementById('detail-location').textContent = b.location;
       document.getElementById('detail-date').textContent = b.date;
       document.getElementById('detail-notes').textContent = b.notes;
+
+      const detailPrice = document.getElementById('detail-price');
+      if (detailPrice) detailPrice.textContent = b.price ? (Number(b.price).toLocaleString('ar-EG') + ' ج.م') : '400 ج.م';
+      
+      const detailPayment = document.getElementById('detail-payment');
+      if (detailPayment) detailPayment.textContent = b.payment || 'كاش';
 
       const waMsg = encodeURIComponent(`مرحباً أستاذ/ة ${b.name}، نتواصل معك من مركز فيزيو إكسبيرت بخصوص موعد جلستك كود: ${b.id}`);
       document.getElementById('detail-whatsapp-btn').href = `https://wa.me/20${b.phone.replace(/^0+/, '')}?text=${waMsg}`;
@@ -977,12 +1140,26 @@
       document.getElementById('filter-status').value = 'all';
       document.getElementById('filter-specialty').value = 'all';
       document.getElementById('filter-doctor').value = 'all';
+      const filterPay = document.getElementById('filter-payment');
+      if (filterPay) filterPay.value = 'all';
       renderTable();
     }
 
-    // 5. محرك تصدير التقرير إلى Excel (CSV بتنسيق UTF-8 مع BOM)
+    // 5. محرك تصدير التقرير إلى Excel (CSV بتنسيق UTF-8 مع BOM) متضمناً السعر والدفع
     function exportToCSV() {
-      const headers = ["كود الحجز", "اسم المريض", "رقم الهاتف", "التخصص", "الطبيب المعالج", "المكان والغرفة", "تاريخ الموعد", "الحالة", "الملاحظات"];
+      const headers = [
+        "كود الحجز",
+        "اسم المريض",
+        "رقم الهاتف",
+        "التخصص",
+        "الطبيب المشرف",
+        "المكان والغرفة",
+        "تاريخ الموعد",
+        "سعر الجلسة (ج.م)",
+        "طريقة الدفع",
+        "الحالة",
+        "الملاحظات"
+      ];
       
       const rows = bookings.map(b => [
         `"${b.id}"`,
@@ -992,6 +1169,8 @@
         `"${b.doctor}"`,
         `"${b.location}"`,
         `"${b.date}"`,
+        `"${b.price || 0}"`,
+        `"${b.payment || 'كاش'}"`,
         `"${b.status}"`,
         `"${(b.notes || '').replace(/"/g, '""')}"`
       ]);
@@ -1001,32 +1180,107 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `تقرير_حجوزات_فيزيو_إكسبيرت_${new Date().toISOString().split('T')[0]}.csv`;
+      a.download = `تقرير_حجوزات_فيزيو_إكسبيرت_والإيرادات_${new Date().toISOString().split('T')[0]}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
 
-    // 6. المزامنة السريعة مع Google Sheets
-    async function syncWithGoogleSheet() {
+    // 6. المزامنة الحية المباشرة مع شيت جوجل (Google Visualization API + JSONP)
+    window.handleGoogleSheetSync = function(json) {
+      try {
+        if (!json || !json.table || !json.table.rows) return;
+        const sheetRows = json.table.rows;
+        // Rows 0 and 1 are summary info, Row 2 is headers, Row 3+ are actual bookings
+        const parsedBookings = [];
+        for (let i = 3; i < sheetRows.length; i++) {
+          const r = sheetRows[i];
+          if (!r || !r.c) continue;
+          const getVal = (idx) => {
+            const cell = r.c[idx];
+            return cell ? (cell.f || cell.v || '') : '';
+          };
+          
+          const id = String(getVal(1)).trim();
+          const patientName = String(getVal(3)).trim();
+          if (!id || !patientName || id === 'null') continue;
+          
+          const regDate = String(getVal(2)).trim();
+          const phone = String(getVal(4)).trim();
+          const specialty = String(getVal(5)).trim() || 'إصابات الملاعب والتأهيل الرياضي';
+          const doctor = String(getVal(6)).trim() || 'د. مؤمن البحيري';
+          const date = String(getVal(7)).trim() || new Date().toISOString().split('T')[0];
+          
+          // قراءة واستخراج السعر بدقة
+          const rawPrice = String(getVal(8));
+          const priceClean = parseInt(rawPrice.replace(/[^\d]/g, ''), 10);
+          const priceNum = (!isNaN(priceClean) && priceClean > 0) ? priceClean : 400;
+          
+          // قراءة طريقة الدفع
+          const payment = String(getVal(9)).trim() || 'كاش';
+          const notes = String(getVal(10)).trim() || 'لا توجد ملاحظات';
+          const rawStatus = String(getVal(11)).trim();
+          
+          let status = 'pending';
+          if (rawStatus === 'مؤكد') status = 'confirmed';
+          else if (rawStatus === 'مكتمل') status = 'completed';
+          else if (rawStatus === 'ملغي') status = 'cancelled';
+          else status = 'pending';
+          
+          const adminNotes = String(getVal(14)).trim();
+          
+          parsedBookings.push({
+            id,
+            name: patientName,
+            phone,
+            specialty,
+            doctor,
+            location: 'صالة الجيم / غرفة فردية',
+            date,
+            price: priceNum,
+            payment,
+            notes: adminNotes ? `${notes} (ملاحظة: ${adminNotes})` : notes,
+            status,
+            followups: [
+              { date: regDate || date, note: `مسجل في شيت جوجل الرسمي | الدفع: ${payment} | الحالة: ${rawStatus}` }
+            ]
+          });
+        }
+        
+        if (parsedBookings.length > 0) {
+          bookings = parsedBookings;
+          saveBookings();
+          const statusText = document.getElementById('sync-status-text');
+          if (statusText) {
+            statusText.textContent = `متصل ومُحدّث بنجاح (${parsedBookings.length} حجوزات من شيت جوجل)`;
+          }
+        }
+      } catch (err) {
+        console.error("خطأ في قراءة بيانات الشيت:", err);
+      }
+    };
+
+    function syncWithGoogleSheet() {
       const icon = document.getElementById('sync-icon');
       const statusText = document.getElementById('sync-status-text');
-      icon.classList.add('animate-spin');
-      statusText.textContent = "جارِ المزامنة...";
+      if (icon) icon.classList.add('animate-spin');
+      if (statusText) statusText.textContent = "جارِ المزامنة الحية مع شيت جوجل...";
 
-      try {
-        // فحص الاتصال
-        await fetch(scriptURL, { method: 'GET', mode: 'no-cors' });
-        setTimeout(() => {
-          icon.classList.remove('animate-spin');
-          statusText.textContent = "تمت المزامنة بنجاح";
-          setTimeout(() => statusText.textContent = "متصل بالسيرفر والبيانات", 3000);
-        }, 1000);
-      } catch (e) {
-        icon.classList.remove('animate-spin');
-        statusText.textContent = "متصل محلياً ومؤمّن";
-      }
+      const existingScript = document.getElementById('gviz-sync-script');
+      if (existingScript) existingScript.remove();
+
+      const script = document.createElement('script');
+      script.id = 'gviz-sync-script';
+      script.src = `https://docs.google.com/spreadsheets/d/${googleSheetId}/gviz/tq?tqx=responseHandler:handleGoogleSheetSync&gid=0&_t=${Date.now()}`;
+      script.onload = () => {
+        if (icon) icon.classList.remove('animate-spin');
+      };
+      script.onerror = () => {
+        if (icon) icon.classList.remove('animate-spin');
+        if (statusText) statusText.textContent = "متصل محلياً (تعذر الاتصال الخارجي)";
+      };
+      document.body.appendChild(script);
     }
   </script>
 </body>
