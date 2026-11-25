@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة تحكم مركز فيزيو إكسبيرت | Physio Expert Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 1rem;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    }
+    .tab-active {
+      background-color: #0284c7;
+      color: #ffffff;
+      border-color: #0284c7;
+    }
+    .tab-inactive {
+      background-color: #ffffff;
+      color: #475569;
+      border-color: #cbd5e1;
+    }
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Top Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-sky-600 text-white font-black text-lg">PE</span>
+          <div>
+            <h1 class="text-lg sm:text-xl font-extrabold text-slate-900">مركز فيزيو إكسبيرت للعلاج الطبيعي والتأهيل الطبي والرياضي</h1>
+            <p class="text-xs sm:text-sm text-slate-500">الإسكندرية، سموحة • هاتف / واتساب: 01000402463 - 034299727 • متصل بالشيت لحظياً</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <span id="syncStatusBadge" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span id="syncStatusText">جاري الاتصال بالشيت...</span>
+        </span>
+
+        <button onclick="loadSheetData()" class="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs sm:text-sm font-bold transition">
+          تحديث الآن
+        </button>
+
+        <button onclick="togglePhonePrivacy()" id="privacyBtn" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold transition">
+          إظهار الأرقام
+        </button>
+
+        <button onclick="toggleSettingsModal()" class="px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-bold transition">
+          إعدادات الربط
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Connection Settings Drawer -->
+  <div id="settingsPanel" class="hidden bg-sky-50 border-b border-sky-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+      <div class="flex flex-col md:flex-row items-stretch md:items-end gap-3">
+        <div class="flex-1">
+          <label class="block text-xs font-bold text-slate-700 mb-1">رابط Google Sheet (gid=0) أو Google Apps Script</label>
+          <input id="sheetUrlInput" type="text" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:border-sky-500" />
+        </div>
+        <div class="w-full md:w-48">
+          <label class="block text-xs font-bold text-slate-700 mb-1">اسم الورقة (Sheet Tab)</label>
+          <input id="sheetNameInput" type="text" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-sm focus:outline-none focus:border-sky-500" />
+        </div>
+        <button onclick="saveConnectionSettings()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition">
+          حفظ والاتصال
+        </button>
+        <button onclick="resetConnectionSettings()" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold transition">
+          استعادة الافتراضي
+        </button>
+        <button onclick="resetConnectionSettings()" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold transition">
+          استعادة الافتراضي
+        </button>
+      </div>
+      <p class="text-xs text-slate-600 mt-2">مربوط مباشرة بالورقة الأساسية (gid=0) شاملة الحجوزات، إحصائيات الأطباء، وإدارة المصروفات والخزنة.</p>
+    </div>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+    <!-- Facility, Bookings & Treasury KPIs (8 Cards matching all Sheet Header KPIs) -->
+    <section class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+      <div class="card p-3.5">
+        <p class="text-[11px] font-bold text-slate-500">غرف الكشف والتأهيل</p>
+        <p class="text-lg sm:text-xl font-black text-slate-900 mt-1">18 غرفة</p>
+        <p class="text-[10px] text-sky-700 font-semibold mt-1">18 سرير منفرد</p>
+      </div>
+
+      <div class="card p-3.5">
+        <p class="text-[11px] font-bold text-slate-500">التأهيل الرياضي</p>
+        <p class="text-lg sm:text-xl font-black text-slate-900 mt-1">صالة جيم</p>
+        <p class="text-[10px] text-sky-700 font-semibold mt-1">تأهيل طبي ورياضي</p>
+      </div>
+
+      <div class="card p-3.5">
+        <p class="text-[11px] font-bold text-slate-500">إجمالي الحجوزات</p>
+        <p id="kpiTotalBookings" class="text-lg sm:text-xl font-black text-slate-900 mt-1">0</p>
+        <p class="text-[10px] text-slate-500 mt-1">إجمالي المرضى بالجدول</p>
+      </div>
+
+      <div class="card p-3.5">
+        <p class="text-[11px] font-bold text-slate-500">الحجوزات المؤكدة</p>
+        <p id="kpiConfirmed" class="text-lg sm:text-xl font-black text-emerald-600 mt-1">0</p>
+        <p id="kpiConfirmedRate" class="text-[10px] text-emerald-700 font-semibold mt-1">0% مثبتة نهائياً</p>
+      </div>
+
+      <div class="card p-3.5">
+        <p class="text-[11px] font-bold text-slate-500">قيد المراجعة</p>
+        <p id="kpiPending" class="text-lg sm:text-xl font-black text-amber-600 mt-1">0</p>
+        <p class="text-[10px] text-slate-500 mt-1">بانتظار التأكيد أو التنسيق</p>
+      </div>
+
+      <div class="card p-3.5">
+        <p class="text-[11px] font-bold text-slate-500">إجمالي إيراد الكاش</p>
+        <p id="kpiCashRevenue" class="text-lg sm:text-xl font-black text-sky-700 mt-1">0 ج.م</p>
+        <p id="kpiCashCount" class="text-[10px] text-slate-500 mt-1">0 حالة كاش</p>
+      </div>
+
+      <div class="card p-3.5">
+        <p class="text-[11px] font-bold text-slate-500">إجمالي المصروفات</p>
+        <p id="kpiTotalExpenses" class="text-lg sm:text-xl font-black text-rose-600 mt-1">0 ج.م</p>
+        <p id="kpiExpenseCount" class="text-[10px] text-slate-500 mt-1">0 بند مصروفات</p>
+      </div>
+
+      <div class="card p-3.5 bg-emerald-50/40 border-emerald-200">
+        <p class="text-[11px] font-bold text-emerald-800">رصيد الخزنة (الصافي)</p>
+        <p id="kpiTreasuryBalance" class="text-lg sm:text-xl font-black text-emerald-700 mt-1">0 ج.م</p>
+        <p id="kpiContractInfo" class="text-[10px] text-slate-600 mt-1">تعاقدات: 0 ج.م</p>
+      </div>
+    </section>
+
+    <!-- Doctors Workload Section -->
+    <section class="card p-5 space-y-5">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-slate-100 pb-4">
+        <div>
+          <h2 class="text-lg font-extrabold text-slate-900">إحصائيات جلسات وحالات الأطباء (تلقائياً من الشيت)</h2>
+          <p class="text-xs text-slate-500">توزيع الحالات والإيرادات لكل طبيب مشرف، طبيب كشف، وطبيب جلسات مع توحيد الأسماء تلقائياً</p>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <button id="tabSupDoc" onclick="switchDoctorTab('supervising')" class="tab-active px-3.5 py-2 rounded-xl border text-xs sm:text-sm font-bold transition">
+            الأطباء المشرفون (إحصائيات الشيت)
+          </button>
+          <button id="tabExamDoc" onclick="switchDoctorTab('exam')" class="tab-inactive px-3.5 py-2 rounded-xl border text-xs sm:text-sm font-bold transition">
+            أطباء الكشف
+          </button>
+          <button id="tabSessionDoc" onclick="switchDoctorTab('session')" class="tab-inactive px-3.5 py-2 rounded-xl border text-xs sm:text-sm font-bold transition">
+            أطباء الجلسات (الملاحظات)
+          </button>
+        </div>
+      </div>
+
+      <!-- Doctors Summary Cards Grid -->
+      <div id="doctorsCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5"></div>
+
+      <!-- Doctors Chart & Detailed Breakdown Table -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-2">
+        <div class="lg:col-span-5 bg-slate-50 rounded-xl p-4 border border-slate-200/70">
+          <h3 id="doctorChartTitle" class="text-sm font-bold text-slate-800 mb-3">توزيع الجلسات لكل طبيب مشرف</h3>
+          <div class="h-64">
+            <canvas id="doctorsChart"></canvas>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-right text-xs sm:text-sm">
+            <thead class="bg-slate-100 text-slate-700 font-bold">
+              <tr>
+                <th class="py-3 px-3">اسم الطبيب</th>
+                <th class="py-3 px-3">عدد الحالات</th>
+                <th class="py-3 px-3">المؤكدة</th>
+                <th class="py-3 px-3">كاش</th>
+                <th class="py-3 px-3">تعاقد / باقات</th>
+                <th class="py-3 px-3">إجمالي الإيراد</th>
+                <th class="py-3 px-3">النسبة</th>
+                <th class="py-3 px-3">إجراء</th>
+              </tr>
+            </thead>
+            <tbody id="doctorsTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Operational Charts + Expenses & Treasury Section -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <div class="lg:col-span-7 card p-5">
+        <h3 class="text-base font-extrabold text-slate-900 mb-1">حركة الحجوزات اليومية</h3>
+        <p class="text-xs text-slate-500 mb-4">عدد الحالات المسجلة يومياً وفقاً لتاريخ وموعد الجلسة بالشيت</p>
+        <div class="h-64">
+          <canvas id="dailyTrendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Expenses & Treasury Box (Q12:T from Sheet) -->
+      <div class="lg:col-span-5 card p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900">إدارة المصروفات والخزنة</h3>
+              <p class="text-xs text-slate-500">متابعة المصروفات اليومية وصافي الخزنة من الأعمدة Q:T بالشيت</p>
+            </div>
+            <span id="treasuryNetBadge" class="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              صافي الخزنة: 0 ج.م
+            </span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 mb-3 text-center">
+            <div class="p-2.5 rounded-xl bg-sky-50 border border-sky-100">
+              <p class="text-[11px] text-slate-600 font-bold">التحصيل النقدي</p>
+              <p id="boxCashIn" class="text-sm font-black text-sky-700 mt-0.5">0 ج.م</p>
+            </div>
+            <div class="p-2.5 rounded-xl bg-rose-50 border border-rose-100">
+              <p class="text-[11px] text-slate-600 font-bold">المصروفات</p>
+              <p id="boxExpensesOut" class="text-sm font-black text-rose-700 mt-0.5">0 ج.م</p>
+            </div>
+            <div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-100">
+              <p class="text-[11px] text-slate-600 font-bold">رصيد الخزنة</p>
+              <p id="boxTreasuryNet" class="text-sm font-black text-emerald-700 mt-0.5">0 ج.م</p>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto border border-slate-200 rounded-xl max-h-48">
+            <table class="w-full text-right text-xs">
+              <thead class="bg-slate-100 text-slate-700 font-bold sticky top-0">
+                <tr>
+                  <th class="py-2 px-2.5">التاريخ</th>
+                  <th class="py-2 px-2.5">بيان المصروف</th>
+                  <th class="py-2 px-2.5">المبلغ</th>
+                  <th class="py-2 px-2.5">ملاحظات</th>
+                </tr>
+              </thead>
+              <tbody id="expensesTableBody" class="divide-y divide-slate-100">
+                <tr>
+                  <td colspan="4" class="py-6 text-center text-slate-400">لا توجد مصروفات مسجلة حالياً في جدول المصروفات</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Full Sheet Records Table -->
+    <section class="card p-5 space-y-4">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-extrabold text-slate-900">سجل الحجوزات الكامل من الشيت (B12:O)</h2>
+          <p class="text-xs text-slate-500">عرض كافة الأعمدة والتفاصيل مع إرسال واتساب مباشر وتحديث حالة الإشعار</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="resetFilters()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
+            إعادة ضبط الفلاتر
+          </button>
+          <button onclick="exportFilteredCSV()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition">
+            تصدير CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- Multi-Criteria Filters -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+        <input id="searchInput" oninput="applyFilters()" type="text" placeholder="بحث بالاسم، الكود، أو الهاتف..." class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs sm:text-sm" />
+
+        <select id="filterSupDoc" onchange="applyFilters()" class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs sm:text-sm">
+          <option value="">كل الأطباء المشرفين</option>
+        </select>
+
+        <select id="filterExamDoc" onchange="applyFilters()" class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs sm:text-sm">
+          <option value="">كل أطباء الكشف</option>
+        </select>
+
+        <select id="filterSessionDoc" onchange="applyFilters()" class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs sm:text-sm">
+          <option value="">كل أطباء الجلسات</option>
+        </select>
+
+        <select id="filterStatus" onchange="applyFilters()" class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs sm:text-sm">
+          <option value="">كل حالات الحجز</option>
+        </select>
+
+        <input id="filterDate" onchange="applyFilters()" type="date" class="px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs sm:text-sm" />
+      </div>
+
+      <div class="flex items-center justify-between text-xs text-slate-600 font-semibold">
+        <span id="filteredSummaryText">عرض 0 سجل</span>
+        <span id="filteredRevenueText">إيراد التصفية: 0 ج.م</span>
+      </div>
+
+      <div class="overflow-x-auto border border-slate-200 rounded-xl max-h-[560px]">
+        <table class="w-full text-right text-xs whitespace-nowrap">
+          <thead class="bg-slate-100 text-slate-800 font-bold sticky top-0 z-10">
+            <tr>
+              <th class="py-3 px-3">كود الحجز</th>
+              <th class="py-3 px-3">تاريخ التسجيل</th>
+              <th class="py-3 px-3">اسم المريض</th>
+              <th class="py-3 px-3">الهاتف</th>
+              <th class="py-3 px-3">طبيب الكشف</th>
+              <th class="py-3 px-3">الطبيب المشرف</th>
+              <th class="py-3 px-3">طبيب الجلسات</th>
+              <th class="py-3 px-3">نوع الإجراء</th>
+              <th class="py-3 px-3">السن</th>
+              <th class="py-3 px-3">موعد الجلسة</th>
+              <th class="py-3 px-3">السعر</th>
+              <th class="py-3 px-3">الدفع</th>
+              <th class="py-3 px-3">حالة الحجز</th>
+              <th class="py-3 px-3">إشعار واتساب</th>
+              <th class="py-3 px-3">ملاحظات الحالة / الجهاز</th>
+              <th class="py-3 px-3">آخر تعديل</th>
+              <th class="py-3 px-3">ملاحظات الأدمن</th>
+            </tr>
+          </thead>
+          <tbody id="recordsTableBody" class="divide-y divide-slate-100 bg-white"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+      <script>
+    // =========================================================================
+    // الإعدادات المدمجة ورابط شيت مركز فيزيو إكسبيرت (الورقة 1 - gid=0)
+    // =========================================================================
+    const EMBEDDED_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1F3s_nbFmXNb6MrfXmXXcFAgkkKrQ6YfSRhKmXJpJHX0/edit?gid=0#gid=0';
+    const EMBEDDED_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyxyuM3Y-Q6T5R_qCwaB1BUfwLVQ23bJy2Bge3WTNzDVE7_hNOwWndUaxU8mg2RVGcX/exec';
+
+    function initConfig() {
+      let storedUrl = '';
+      try {
+        storedUrl = localStorage.getItem('pe_source_url') || '';
+      } catch (e) {}
+
+      if (!storedUrl || !storedUrl.includes('spreadsheets/d/')) {
+        storedUrl = EMBEDDED_SHEET_URL;
+      }
+
+      let storedScript = '';
+      let storedName = 'الورقة1';
+      try {
+        storedScript = localStorage.getItem('pe_apps_script_url') || EMBEDDED_APPS_SCRIPT_URL;
+        storedName = localStorage.getItem('pe_sheet_name') || 'الورقة1';
+      } catch (e) {}
+
+      return {
+        sheetUrl: storedUrl,
+        appsScriptUrl: storedScript,
+        sheetName: storedName,
+        gid: '0',
+        autoRefreshSeconds: 60
+      };
+    }
+
+    const DEFAULT_CONFIG = initConfig();
+
+    // أطباء الكشف الأساسيون بالشيت لضمان ظهورهم حتى لو رصيدهم 0
+    const REGISTERED_EXAM_DOCTORS = [
+      'د. مؤمن البحيري',
+      'د. محمد جمال',
+      'د. مي فريد',
+      'د. بسمة عبد المطلب'
+    ];
+
+    const DOCTOR_ALIASES = {
+      'احمد': 'د. أحمد محمد',
+      'أحمد': 'د. أحمد محمد',
+      'احمد محمد': 'د. أحمد محمد',
+      'أحمد محمد': 'د. أحمد محمد',
+      'معتز': 'د. معتز علاء',
+      'معتز علاء': 'د. معتز علاء',
+      'عمر': 'د. عمر عصام',
+      'عمر عصام': 'د. عمر عصام',
+      'مؤمن': 'د. مؤمن البحيري',
+      'مؤمن البحيري': 'د. مؤمن البحيري',
+      'مؤمن البحري': 'د. مؤمن البحيري',
+      'مؤمن البحيرى': 'د. مؤمن البحيري',
+      'محمد جمال': 'د. محمد جمال',
+      'مريم مصطفى': 'د. مريم مصطفى',
+      'مريم علاء': 'د. مريم علاء',
+      'مريم خليل': 'د. مريم خليل',
+      'منصور': 'د. منصور السعيد',
+      'منصور السعيد': 'د. منصور السعيد',
+      'بسمة': 'د. بسمة عبد المطلب',
+      'بسمة عبد المطلب': 'د. بسمة عبد المطلب',
+      'مي': 'د. مي فريد',
+      'مي فريد': 'د. مي فريد',
+      'سلمى': 'د. سلمى الشعراوي',
+      'سلمى الشعراوي': 'د. سلمى الشعراوي'
+    };
+
+    let allRecords = [];
+    let filteredRecords = [];
+    let expenseRecords = [];
+    let currentDoctorTab = 'supervising'; // 'supervising' | 'exam' | 'session'
+    let showPhones = false;
+    let doctorsChartInstance = null;
+    let dailyTrendChartInstance = null;
+
+    // توحيد أسماء الأطباء لمنع التكرار (مثل: دمؤمن البحيري / د مؤمن البحيري / د. مؤمن البحيري)
+    function normalizeDoctorName(raw) {
+      if (!raw) return 'غير محدد';
+      let name = String(raw).trim();
+      if (!name || name === '-' || name === 'undefined' || name === 'null') return 'غير محدد';
+
+      // إزالة أي بادئة مثل د/ أو د. أو دكتور للمقارنة
+      let clean = name.replace(/^(د[\.\s\/]*|دكتور\s*)/i, '').trim();
+      clean = clean.replace(/أ/g, 'ا').replace(/إ/g, 'ا').replace(/آ/g, 'ا').replace(/ى/g, 'ي').replace(/\s+/g, ' ');
+
+      for (const [alias, canonical] of Object.entries(DOCTOR_ALIASES)) {
+        const normAlias = alias.replace(/أ/g, 'ا').replace(/إ/g, 'ا').replace(/آ/g, 'ا').replace(/ى/g, 'ي');
+        if (clean === normAlias || clean.startsWith(normAlias)) {
+          return canonical;
+        }
+      }
+
+      if (!name.startsWith('د.') && !name.startsWith('د ')) {
+        return 'د. ' + name;
+      }
+      return name.replace(/^د[\.\s]*/, 'د. ').trim();
+    }
+
+    function parseClinicalNotes(notesText) {
+      const text = String(notesText || '').trim();
+      let sessionDoctor = 'غير محدد';
+      let age = '-';
+      let procedureType = 'جلسة';
+
+      const docMatch = text.match(/طبيب\s*الجلسات\s*:\s*([^|\r\n]+)/i);
+      if (docMatch && docMatch[1]) {
+        sessionDoctor = normalizeDoctorName(docMatch[1]);
+      }
+
+      const ageMatch = text.match(/السن\s*:\s*(\d+)/i);
+      if (ageMatch && ageMatch[1]) {
+        age = ageMatch[1];
+      }
+
+      if (/كشف\s*\+\s*جلس/i.test(text)) {
+        procedureType = 'كشف + جلسة';
+      } else if (/دفع|باقي|باقة/i.test(text)) {
+        procedureType = 'باقة / مدفوع مسبقاً';
+      } else if (/كشف/i.test(text)) {
+        procedureType = 'كشف';
+      }
+
+      return { sessionDoctor, age, procedureType };
+    }
+
+    function parsePrice(val) {
+      if (typeof val === 'number') return val;
+      const str = String(val || '').trim();
+      if (!str) return 0;
+      const arabicDigits = '٠١٢٣٤٥٦٧٨٩';
+      let cleaned = str.replace(/[٠-٩]/g, d => arabicDigits.indexOf(d));
+      cleaned = cleaned.replace(/[ج\.م٬,\s]/g, '');
+      cleaned = cleaned.replace(/[^\d.-]/g, '');
+      return parseFloat(cleaned) || 0;
+    }
+
+    function extractSheetInfo(urlOrId) {
+      const str = String(urlOrId || '').trim();
+      const idMatch = str.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+      const gidMatch = str.match(/[#?&]gid=(\d+)/);
+      const sheetId = idMatch ? idMatch[1] : (/^[a-zA-Z0-9-_]{25,}$/.test(str) && !str.startsWith('http') ? str : '1F3s_nbFmXNb6MrfXmXXcFAgkkKrQ6YfSRhKmXJpJHX0');
+      const gid = gidMatch ? gidMatch[1] : (DEFAULT_CONFIG.gid || '0');
+      return { sheetId, gid };
+    }
+
+    function toggleSettingsModal() {
+      const panel = document.getElementById('settingsPanel');
+      panel.classList.toggle('hidden');
+      document.getElementById('sheetUrlInput').value = DEFAULT_CONFIG.sheetUrl;
+      document.getElementById('sheetNameInput').value = DEFAULT_CONFIG.sheetName;
+    }
+
+    function saveConnectionSettings() {
+      const urlVal = document.getElementById('sheetUrlInput').value.trim();
+      const nameVal = document.getElementById('sheetNameInput').value.trim() || 'الورقة1';
+      if (urlVal.includes('script.google.com')) {
+        DEFAULT_CONFIG.appsScriptUrl = urlVal;
+        try { localStorage.setItem('pe_apps_script_url', urlVal); } catch (e) {}
+      } else {
+        DEFAULT_CONFIG.sheetUrl = urlVal || EMBEDDED_SHEET_URL;
+        try { localStorage.setItem('pe_source_url', DEFAULT_CONFIG.sheetUrl); } catch (e) {}
+      }
+      DEFAULT_CONFIG.sheetName = nameVal;
+      try { localStorage.setItem('pe_sheet_name', nameVal); } catch (e) {}
+      document.getElementById('settingsPanel').classList.add('hidden');
+      loadSheetData();
+    }
+
+    function resetConnectionSettings() {
+      try {
+        localStorage.removeItem('pe_source_url');
+        localStorage.removeItem('pe_apps_script_url');
+        localStorage.removeItem('pe_sheet_name');
+      } catch (e) {}
+      DEFAULT_CONFIG.sheetUrl = EMBEDDED_SHEET_URL;
+      DEFAULT_CONFIG.appsScriptUrl = EMBEDDED_APPS_SCRIPT_URL;
+      DEFAULT_CONFIG.sheetName = 'الورقة1';
+      document.getElementById('sheetUrlInput').value = EMBEDDED_SHEET_URL;
+      document.getElementById('sheetNameInput').value = 'الورقة1';
+      document.getElementById('settingsPanel').classList.add('hidden');
+      loadSheetData();
+    }
+
+    function togglePhonePrivacy() {
+      showPhones = !showPhones;
+      document.getElementById('privacyBtn').textContent = showPhones ? 'إخفاء الأرقام' : 'إظهار الأرقام';
+      renderRecordsTable();
+    }
+
+    function formatPhone(phone) {
+      const p = String(phone || '').trim();
+      if (!p) return '-';
+      if (showPhones || p.length < 7) return p;
+      return p.slice(0, 4) + '****' + p.slice(-3);
+    }
+
+    function updateSyncBadge(status, message) {
+      const badge = document.getElementById('syncStatusBadge');
+      const text = document.getElementById('syncStatusText');
+      if (!badge || !text) return;
+      text.textContent = message;
+      const dot = badge.firstElementChild;
+      if (status === 'success') {
+        badge.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200';
+        if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+      } else if (status === 'loading') {
+        badge.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200';
+        if (dot) dot.className = 'w-2 h-2 rounded-full bg-sky-500 animate-ping';
+      } else {
+        badge.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200';
+        if (dot) dot.className = 'w-2 h-2 rounded-full bg-amber-500';
+      }
+    }
+
+    // مفسر CSV متوافق مع معايير RFC 4180 لمعالجة الفواصل والاقتباسات واللغة العربية بدقة
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let inQuotes = false;
+      let currentField = '';
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const nextChar = text[i + 1];
+        if (char === '"') {
+          if (inQuotes && nextChar === '"') {
+            currentField += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          row.push(currentField.trim());
+          currentField = '';
+        } else if ((char === '\r' || char === '\n') && !inQuotes) {
+          if (char === '\r' && nextChar === '\n') {
+            i++;
+          }
+          row.push(currentField.trim());
+          if (row.some(c => c !== '')) {
+            rows.push(row);
+          }
+          row = [];
+          currentField = '';
+        } else {
+          currentField += char;
+        }
+      }
+      if (currentField || row.length > 0) {
+        row.push(currentField.trim());
+        if (row.some(c => c !== '')) {
+          rows.push(row);
+        }
+      }
+      return rows;
+    }
+
+    // الطريقة الأولى: التصدير المباشر بتنسيق CSV (مفعل به CORS مجاناً ومباشرة من Google)
+    async function fetchDirectCsv(sheetId, gid) {
+      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}&_t=${Date.now()}`;
+      const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+      if (!res.ok) throw new Error(`CSV HTTP ${res.status}`);
+      const text = await res.text();
+      const matrix = parseCsv(text);
+      if (!matrix || matrix.length < 5) throw new Error('Empty CSV');
+      return matrix;
+    }
+
+    // الطريقة الثانية: Google GViz عبر JSONP (حقن Script Tag لتجاوز CORS تماماً في جميع المتصفحات)
+    function fetchGvizJsonp(sheetId, gid, sheetName) {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'gvizCallback_' + Math.floor(Math.random() * 10000000);
+        const script = document.createElement('script');
+        let done = false;
+
+        const timeout = setTimeout(() => {
+          if (!done) {
+            done = true;
+            cleanup();
+            reject(new Error('JSONP timeout'));
+          }
+        }, 12000);
+
+        function cleanup() {
+          clearTimeout(timeout);
+          try { delete window[callbackName]; } catch (e) {}
+          if (script.parentNode) script.parentNode.removeChild(script);
+        }
+
+        window[callbackName] = function(response) {
+          if (done) return;
+          done = true;
+          cleanup();
+          if (!response || !response.table || !response.table.rows) {
+            reject(new Error('Invalid gviz table structure'));
+            return;
+          }
+          const rows = (response.table.rows || []).map(r =>
+            (r.c || []).map(cell => (cell ? (cell.f || cell.v || '') : ''))
+          );
+          resolve(rows);
+        };
+
+        script.onerror = function() {
+          if (done) return;
+          done = true;
+          cleanup();
+          reject(new Error('JSONP script load error'));
+        };
+
+        let gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=responseHandler:${callbackName}&gid=${gid}&_t=${Date.now()}`;
+        if (sheetName) {
+          gvizUrl += `&sheet=${encodeURIComponent(sheetName)}`;
+        }
+        script.src = gvizUrl;
+        document.head.appendChild(script);
+      });
+    }
+
+    // الطريقة الثالثة: وسيط AllOrigins الاحتياطي
+    async function fetchViaProxy(sheetId, gid) {
+      const targetUrl = encodeURIComponent(`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`);
+      const proxyUrl = `https://api.allorigins.win/raw?url=${targetUrl}&_t=${Date.now()}`;
+      const res = await fetch(proxyUrl);
+      if (!res.ok) throw new Error(`Proxy HTTP ${res.status}`);
+      const text = await res.text();
+      const matrix = parseCsv(text);
+      if (!matrix || matrix.length < 5) throw new Error('Proxy CSV empty');
+      return matrix;
+    }
+
+    async function loadSheetData() {
+      updateSyncBadge('loading', 'جاري جلب البيانات من Google Sheet...');
+      let rowsMatrix = null;
+      const { sheetId, gid } = extractSheetInfo(DEFAULT_CONFIG.sheetUrl);
+
+      // 1. محاولة تصدير CSV المباشر (يدعم Access-Control-Allow-Origin: *)
+      try {
+        rowsMatrix = await fetchDirectCsv(sheetId, gid);
+      } catch (errCsv) {
+        console.warn('Direct CSV failed, trying JSONP...', errCsv);
+        // 2. محاولة GViz عبر JSONP (متجاوز كامل لقيود CORS)
+        try {
+          rowsMatrix = await fetchGvizJsonp(sheetId, gid, DEFAULT_CONFIG.sheetName);
+        } catch (errJsonp) {
+          console.warn('JSONP failed, trying Proxy...', errJsonp);
+          // 3. محاولة البروكسي الاحتياطي
+          try {
+            rowsMatrix = await fetchViaProxy(sheetId, gid);
+          } catch (errProxy) {
+            console.error('All fetch strategies failed:', { errCsv, errJsonp, errProxy });
+            updateSyncBadge('error', 'تعذر القراءة — تأكد من أن رابط الشيت متاح لأي شخص لديه الرابط (Anyone with the link can view)');
+            return;
+          }
+        }
+      }
+
+      try {
+        processFullSheetMatrix(rowsMatrix);
+        const nowTime = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+        updateSyncBadge('success', `متصل بالشيت مباشرة (${allRecords.length} مريض • ${expenseRecords.length} مصروف) • ${nowTime}`);
+      } catch (procErr) {
+        console.error('Processing error:', procErr);
+        updateSyncBadge('error', 'خطأ في معالجة بيانات الشيت: ' + procErr.message);
+      }
+    }
+
+    function processFullSheetMatrix(matrix) {
+      if (!matrix || !matrix.length) return;
+
+      // البحث عن صف العناوين الرئيسي (الذي يحتوي على كود الحجز)
+      let headerIdx = matrix.findIndex(row =>
+        row.some(cell => String(cell || '').includes('كود الحجز'))
+      );
+      if (headerIdx === -1) headerIdx = 0;
+
+      const headers = matrix[headerIdx].map(h => String(h || '').trim());
+      const findColInRange = (keyword, startCol, endCol, fallback) => {
+        for (let c = startCol; c <= Math.min(endCol, headers.length - 1); c++) {
+          if (headers[c] && headers[c].includes(keyword)) return c;
+        }
+        return fallback;
+      };
+
+      // 1. أعمدة جدول الحجوزات (B:O -> index 1..14)
+      const idxCode = findColInRange('كود الحجز', 0, 15, 1);
+      const idxRegDate = findColInRange('تاريخ التسجيل', 0, 15, 2);
+      const idxPatient = findColInRange('اسم المريض', 0, 15, 3);
+      const idxPhone = findColInRange('الهاتف', 0, 15, 4);
+      const idxExamDoc = findColInRange('طبيب الكشف', 0, 15, 5);
+      const idxSupDoc = findColInRange('الطبيب المشرف', 0, 15, 6);
+      const idxSessionDate = findColInRange('تاريخ وموعد الجلسة', 0, 15, 7);
+      const idxPrice = findColInRange('قيمة الإجراء', 0, 15, 8);
+      const idxPayment = findColInRange('طريقة الدفع', 0, 15, 9);
+      const idxNotes = findColInRange('ملاحظات الحالة', 0, 15, 10);
+      const idxStatus = findColInRange('حالة الحجز', 0, 15, 11);
+      const idxWhatsapp = findColInRange('إشعار واتساب', 0, 15, 12);
+      const idxLastMod = findColInRange('تاريخ آخر تعديل', 0, 15, 13);
+      const idxAdminNotes = findColInRange('ملاحظات الأدمن', 0, 15, 14);
+
+      // 2. أعمدة جدول المصروفات والخزنة (Q:T -> index 16..19)
+      const idxExpDate = findColInRange('التاريخ', 15, 20, 16);
+      const idxExpDesc = findColInRange('بيان المصروف', 15, 20, 17);
+      const idxExpAmount = findColInRange('المبلغ', 15, 20, 18);
+      const idxExpNotes = findColInRange('ملاحظات', 15, 20, 19);
+
+      const parsedBookings = [];
+      const parsedExpenses = [];
+
+      for (let i = headerIdx + 1; i < matrix.length; i++) {
+        const row = matrix[i];
+        if (!row) continue;
+
+        const code = String(row[idxCode] || '').trim();
+        const patientName = String(row[idxPatient] || '').trim();
+
+        // قيد تسجيل الحجز: وجود اسم مريض فعلي (لتجنب صفوف القوالب الفارغة)
+        if (patientName) {
+          const notes = String(row[idxNotes] || '').trim();
+          const clinical = parseClinicalNotes(notes);
+          const paymentRaw = String(row[idxPayment] || '').trim();
+          const paymentMethod = paymentRaw.includes('كاش') ? 'كاش' : (paymentRaw || 'تعاقد / أخرى');
+          const sessionDateRaw = String(row[idxSessionDate] || '').trim();
+          const dateOnly = sessionDateRaw.split(' ')[0] || String(row[idxRegDate] || '').trim();
+
+          parsedBookings.push({
+            code: code || `ROW-${i}`,
+            regDate: String(row[idxRegDate] || '').trim(),
+            patientName: patientName,
+            phone: String(row[idxPhone] || '').trim(),
+            examDoctor: normalizeDoctorName(row[idxExamDoc]),
+            supervisingDoctor: normalizeDoctorName(row[idxSupDoc]),
+            sessionDoctor: clinical.sessionDoctor,
+            procedureType: clinical.procedureType,
+            age: clinical.age,
+            sessionDate: sessionDateRaw,
+            dateOnly,
+            price: parsePrice(row[idxPrice]),
+            paymentMethod,
+            notes,
+            status: String(row[idxStatus] || 'مؤكد').trim(),
+            whatsappStatus: String(row[idxWhatsapp] || '').trim(),
+            lastModified: String(row[idxLastMod] || '').trim(),
+            adminNotes: String(row[idxAdminNotes] || '').trim()
+          });
+        }
+
+        // استخراج سجل المصروفات (Q:T)
+        const expDesc = String(row[idxExpDesc] || '').trim();
+        const expAmt = parsePrice(row[idxExpAmount]);
+        if (expDesc || expAmt > 0) {
+          parsedExpenses.push({
+            date: String(row[idxExpDate] || '').trim(),
+            description: expDesc || 'مصروف',
+            amount: expAmt,
+            notes: String(row[idxExpNotes] || '').trim()
+          });
+        }
+      }
+
+      allRecords = parsedBookings;
+      expenseRecords = parsedExpenses;
+      populateFilterDropdowns();
+      applyFilters();
+    }
+
+    function populateFilterDropdowns() {
+      const fillSelect = (id, values, defaultLabel) => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const current = sel.value;
+        sel.innerHTML = `<option value="">${defaultLabel}</option>` +
+          [...new Set(values)].filter(Boolean).sort().map(v => `<option value="${v}">${v}</option>`).join('');
+        sel.value = current;
+      };
+
+      fillSelect('filterSupDoc', allRecords.map(r => r.supervisingDoctor), 'كل الأطباء المشرفين');
+      fillSelect('filterExamDoc', [...REGISTERED_EXAM_DOCTORS, ...allRecords.map(r => r.examDoctor)], 'كل أطباء الكشف');
+      fillSelect('filterSessionDoc', allRecords.map(r => r.sessionDoctor), 'كل أطباء الجلسات');
+      fillSelect('filterStatus', allRecords.map(r => r.status), 'كل حالات الحجز');
+    }
+
+    function applyFilters() {
+      const q = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+      const supDoc = document.getElementById('filterSupDoc')?.value || '';
+      const eDoc = document.getElementById('filterExamDoc')?.value || '';
+      const sDoc = document.getElementById('filterSessionDoc')?.value || '';
+      const status = document.getElementById('filterStatus')?.value || '';
+      const dateVal = document.getElementById('filterDate')?.value || '';
+
+      filteredRecords = allRecords.filter(r => {
+        if (q && !(
+          r.patientName.toLowerCase().includes(q) ||
+          r.code.toLowerCase().includes(q) ||
+          r.phone.includes(q) ||
+          r.notes.toLowerCase().includes(q)
+        )) return false;
+        if (supDoc && r.supervisingDoctor !== supDoc) return false;
+        if (eDoc && r.examDoctor !== eDoc) return false;
+        if (sDoc && r.sessionDoctor !== sDoc) return false;
+        if (status && r.status !== status) return false;
+        if (dateVal && !r.dateOnly.startsWith(dateVal)) return false;
+        return true;
+      });
+
+      renderKPIsAndTreasury();
+      renderDoctorsSection();
+      renderDailyTrendChart();
+      renderRecordsTable();
+    }
+
+    function resetFilters() {
+      if (document.getElementById('searchInput')) document.getElementById('searchInput').value = '';
+      if (document.getElementById('filterSupDoc')) document.getElementById('filterSupDoc').value = '';
+      if (document.getElementById('filterExamDoc')) document.getElementById('filterExamDoc').value = '';
+      if (document.getElementById('filterSessionDoc')) document.getElementById('filterSessionDoc').value = '';
+      if (document.getElementById('filterStatus')) document.getElementById('filterStatus').value = '';
+      if (document.getElementById('filterDate')) document.getElementById('filterDate').value = '';
+      applyFilters();
+    }
+
+    function renderKPIsAndTreasury() {
+      const total = filteredRecords.length;
+      const confirmed = filteredRecords.filter(r => r.status === 'مؤكد').length;
+      const pending = total - confirmed;
+
+      const cashRows = filteredRecords.filter(r => r.paymentMethod === 'كاش');
+      const cashRev = cashRows.reduce((acc, r) => acc + r.price, 0);
+
+      const contractRows = filteredRecords.filter(r => r.paymentMethod !== 'كاش');
+      const contractRev = contractRows.reduce((acc, r) => acc + r.price, 0);
+
+      const totalExpenses = expenseRecords.reduce((acc, e) => acc + e.amount, 0);
+      const treasuryNet = cashRev - totalExpenses;
+
+      document.getElementById('kpiTotalBookings').textContent = total.toLocaleString('ar-EG');
+      document.getElementById('kpiConfirmed').textContent = confirmed.toLocaleString('ar-EG');
+      document.getElementById('kpiConfirmedRate').textContent = `${total ? ((confirmed / total) * 100).toFixed(1) : 0}% مثبتة نهائياً`;
+      document.getElementById('kpiPending').textContent = pending.toLocaleString('ar-EG');
+      document.getElementById('kpiCashRevenue').textContent = `${cashRev.toLocaleString('ar-EG')} ج.م`;
+      document.getElementById('kpiCashCount').textContent = `${cashRows.length.toLocaleString('ar-EG')} حالة كاش`;
+
+      document.getElementById('kpiTotalExpenses').textContent = `${totalExpenses.toLocaleString('ar-EG')} ج.م`;
+      document.getElementById('kpiExpenseCount').textContent = `${expenseRecords.length.toLocaleString('ar-EG')} بند مسجل`;
+      document.getElementById('kpiTreasuryBalance').textContent = `${treasuryNet.toLocaleString('ar-EG')} ج.م`;
+      document.getElementById('kpiContractInfo').textContent = `تعاقدات: ${contractRev.toLocaleString('ar-EG')} ج.م`;
+
+      // تحديث صندوق المصروفات والخزنة
+      document.getElementById('treasuryNetBadge').textContent = `صافي الخزنة: ${treasuryNet.toLocaleString('ar-EG')} ج.م`;
+      document.getElementById('boxCashIn').textContent = `${cashRev.toLocaleString('ar-EG')} ج.م`;
+      document.getElementById('boxExpensesOut').textContent = `${totalExpenses.toLocaleString('ar-EG')} ج.م`;
+      document.getElementById('boxTreasuryNet').textContent = `${treasuryNet.toLocaleString('ar-EG')} ج.م`;
+
+      const expBody = document.getElementById('expensesTableBody');
+      if (!expBody) return;
+      if (expenseRecords.length === 0) {
+        expBody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-400">لا توجد مصروفات مسجلة حالياً في جدول المصروفات</td></tr>`;
+      } else {
+        expBody.innerHTML = expenseRecords.map(e => `
+          <tr class="hover:bg-slate-50">
+            <td class="py-2 px-2.5 text-slate-600">${e.date || '-'}</td>
+            <td class="py-2 px-2.5 font-bold text-slate-800">${e.description}</td>
+            <td class="py-2 px-2.5 font-extrabold text-rose-700">${e.amount.toLocaleString('ar-EG')} ج.م</td>
+            <td class="py-2 px-2.5 text-slate-500">${e.notes || '-'}</td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    function switchDoctorTab(tab) {
+      currentDoctorTab = tab;
+      ['supervising', 'exam', 'session'].forEach(t => {
+        const btn = document.getElementById(
+          t === 'supervising' ? 'tabSupDoc' : (t === 'exam' ? 'tabExamDoc' : 'tabSessionDoc')
+        );
+        if (btn) {
+          btn.className = (t === tab ? 'tab-active' : 'tab-inactive') + ' px-3.5 py-2 rounded-xl border text-xs sm:text-sm font-bold transition';
+        }
+      });
+      renderDoctorsSection();
+    }
+
+    function filterBySpecificDoctor(doctorName) {
+      if (currentDoctorTab === 'supervising') {
+        const el = document.getElementById('filterSupDoc');
+        if (el) el.value = doctorName;
+      } else if (currentDoctorTab === 'exam') {
+        const el = document.getElementById('filterExamDoc');
+        if (el) el.value = doctorName;
+      } else {
+        const el = document.getElementById('filterSessionDoc');
+        if (el) el.value = doctorName;
+      }
+      applyFilters();
+      const table = document.getElementById('recordsTableBody');
+      if (table) table.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function renderDoctorsSection() {
+      const fieldMap = {
+        supervising: 'supervisingDoctor',
+        exam: 'examDoctor',
+        session: 'sessionDoctor'
+      };
+      const titleMap = {
+        supervising: 'توزيع الجلسات حسب الطبيب المشرف (مطابق لإحصائيات الشيت)',
+        exam: 'توزيع الحالات حسب طبيب الكشف (بما يشمل أطباء الكشف المسجلين)',
+        session: 'توزيع الحالات حسب طبيب الجلسات (مستخرج من الملاحظات)'
+      };
+
+      const field = fieldMap[currentDoctorTab];
+      const titleEl = document.getElementById('doctorChartTitle');
+      if (titleEl) titleEl.textContent = titleMap[currentDoctorTab];
+
+      const map = new Map();
+
+      // إضافة أطباء الكشف الأساسيين في الشيت لضمان ظهورهم
+      if (currentDoctorTab === 'exam') {
+        REGISTERED_EXAM_DOCTORS.forEach(docName => {
+          const norm = normalizeDoctorName(docName);
+          map.set(norm, { name: norm, total: 0, confirmed: 0, cash: 0, contract: 0, revenue: 0 });
+        });
+      }
+
+      filteredRecords.forEach(r => {
+        const doc = r[field] || 'غير محدد';
+        if (!map.has(doc)) {
+          map.set(doc, { name: doc, total: 0, confirmed: 0, cash: 0, contract: 0, revenue: 0 });
+        }
+        const entry = map.get(doc);
+        entry.total += 1;
+        if (r.status === 'مؤكد') entry.confirmed += 1;
+        if (r.paymentMethod === 'كاش') entry.cash += 1;
+        else entry.contract += 1;
+        entry.revenue += r.price;
+      });
+
+      const stats = Array.from(map.values()).sort((a, b) => b.total - a.total);
+      const grandTotal = filteredRecords.length || 1;
+
+      const cardsGrid = document.getElementById('doctorsCardsGrid');
+      if (cardsGrid) {
+        cardsGrid.innerHTML = stats.map((d, idx) => {
+          const pct = ((d.total / grandTotal) * 100).toFixed(1);
+          return `
+            <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4 flex flex-col justify-between hover:border-sky-400 transition">
+              <div>
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-sky-100 text-sky-800">#${idx + 1}</span>
+                  <span class="text-xs font-bold text-slate-500">${pct}% من الحالات</span>
+                </div>
+                <h4 class="text-base font-extrabold text-slate-900 mt-2">${d.name}</h4>
+                <div class="mt-3 flex items-baseline justify-between">
+                  <div>
+                    <span class="text-2xl font-black text-sky-700">${d.total}</span>
+                    <span class="text-xs font-bold text-slate-600 mr-1">حالة</span>
+                  </div>
+                  <span class="text-xs font-extrabold text-emerald-700">${d.revenue.toLocaleString('ar-EG')} ج.م</span>
+                </div>
+                <div class="w-full bg-slate-200 h-1.5 rounded-full mt-2 overflow-hidden">
+                  <div class="bg-sky-600 h-1.5 rounded-full" style="width: ${pct}%"></div>
+                </div>
+              </div>
+              <div class="mt-3 pt-2.5 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-600">
+                <span>كاش: <b>${d.cash}</b> | باقات/تعاقد: <b>${d.contract}</b></span>
+                <button onclick="filterBySpecificDoctor('${d.name.replace(/'/g, "\\'")}')" class="text-sky-700 font-bold hover:underline">عرض الحالات</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const tbody = document.getElementById('doctorsTableBody');
+      if (tbody) {
+        tbody.innerHTML = stats.map(d => {
+          const pct = ((d.total / grandTotal) * 100).toFixed(1);
+          return `
+            <tr class="hover:bg-slate-50">
+              <td class="py-2.5 px-3 font-bold text-slate-900">${d.name}</td>
+              <td class="py-2.5 px-3 font-black text-sky-700">${d.total}</td>
+              <td class="py-2.5 px-3 text-emerald-700 font-semibold">${d.confirmed}</td>
+              <td class="py-2.5 px-3">${d.cash}</td>
+              <td class="py-2.5 px-3">${d.contract}</td>
+              <td class="py-2.5 px-3 font-bold text-slate-800">${d.revenue.toLocaleString('ar-EG')} ج.م</td>
+              <td class="py-2.5 px-3 font-semibold text-slate-600">${pct}%</td>
+              <td class="py-2.5 px-3">
+                <button onclick="filterBySpecificDoctor('${d.name.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 font-bold text-xs">فلترة</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      const ctx = document.getElementById('doctorsChart');
+      if (ctx && typeof Chart !== 'undefined') {
+        if (doctorsChartInstance) doctorsChartInstance.destroy();
+        doctorsChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: stats.map(s => s.name),
+            datasets: [{
+              label: 'عدد الحالات',
+              data: stats.map(s => s.total),
+              backgroundColor: '#0284c7',
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, ticks: { font: { family: 'Cairo' } } },
+              x: { ticks: { font: { family: 'Cairo', weight: 'bold' } } }
+            }
+          }
+        });
+      }
+    }
+
+    function renderDailyTrendChart() {
+      const dailyMap = new Map();
+      filteredRecords.forEach(r => {
+        const d = r.dateOnly || 'غير محدد';
+        dailyMap.set(d, (dailyMap.get(d) || 0) + 1);
+      });
+      const sortedDates = Array.from(dailyMap.keys()).sort();
+
+      const ctxDaily = document.getElementById('dailyTrendChart');
+      if (ctxDaily && typeof Chart !== 'undefined') {
+        if (dailyTrendChartInstance) dailyTrendChartInstance.destroy();
+        dailyTrendChartInstance = new Chart(ctxDaily, {
+          type: 'line',
+          data: {
+            labels: sortedDates,
+            datasets: [{
+              label: 'عدد الحالات اليومية',
+              data: sortedDates.map(d => dailyMap.get(d)),
+              borderColor: '#0284c7',
+              backgroundColor: 'rgba(2, 132, 199, 0.12)',
+              fill: true,
+              tension: 0.35,
+              pointRadius: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, ticks: { font: { family: 'Cairo' } } },
+              x: { ticks: { font: { family: 'Cairo' } } }
+            }
+          }
+        });
+      }
+    }
+
+    function markWhatsAppSent(code) {
+      if (!DEFAULT_CONFIG.appsScriptUrl) return;
+      try {
+        fetch(DEFAULT_CONFIG.appsScriptUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'markWhatsAppSent', code: code })
+        });
+      } catch (e) {
+        console.warn('WhatsApp sync skipped:', e);
+      }
+    }
+
+    function buildWhatsAppAction(row) {
+      const rawStatus = String(row.whatsappStatus || '').trim();
+      const isRefError = /^#(REF|ERROR|VALUE|NAME|N\/A)!?$/i.test(rawStatus);
+      const digits = String(row.phone || '').replace(/\D/g, '').replace(/^0+/, '');
+
+      if (digits.length < 9) {
+        return `<span class="text-slate-400">لا يوجد رقم</span>`;
+      }
+
+      const msg = encodeURIComponent(
+        `أهلاً أ/ ${row.patientName}، نؤكد لكم تحديث حجزكم في مركز فيزيو إكسبيرت (كود: ${row.code}) بتاريخ: ${row.sessionDate} - الحالة: ${row.status}`
+      );
+      const waUrl = `https://wa.me/20${digits}?text=${msg}`;
+      const badgeText = isRefError || !rawStatus ? 'إرسال واتساب' : rawStatus;
+      const badgeStyle = rawStatus.includes('تم')
+        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+        : 'bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100';
+
+      return `
+        <a href="${waUrl}" target="_blank" rel="noopener noreferrer"
+           onclick="markWhatsAppSent('${row.code.replace(/'/g, "\\'")}')"
+           class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-bold transition ${badgeStyle}">
+          <span>${badgeText}</span>
+        </a>
+      `;
+    }
+
+    function renderRecordsTable() {
+      const totalRev = filteredRecords.reduce((acc, r) => acc + r.price, 0);
+      const sumEl = document.getElementById('filteredSummaryText');
+      if (sumEl) sumEl.textContent = `عرض ${filteredRecords.length.toLocaleString('ar-EG')} سجل من إجمالي ${allRecords.length.toLocaleString('ar-EG')}`;
+      const revEl = document.getElementById('filteredRevenueText');
+      if (revEl) revEl.textContent = `إيراد التصفية: ${totalRev.toLocaleString('ar-EG')} ج.م`;
+
+      const tbody = document.getElementById('recordsTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = filteredRecords.map(r => {
+        const statusBadge = r.status === 'مؤكد'
+          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+          : 'bg-amber-50 text-amber-700 border-amber-200';
+
+        return `
+          <tr class="hover:bg-slate-50">
+            <td class="py-2.5 px-3 font-bold text-slate-800">${r.code}</td>
+            <td class="py-2.5 px-3 text-slate-600">${r.regDate}</td>
+            <td class="py-2.5 px-3 font-bold text-slate-900">${r.patientName}</td>
+            <td class="py-2.5 px-3 font-mono text-slate-700" dir="ltr">${formatPhone(r.phone)}</td>
+            <td class="py-2.5 px-3 text-slate-700">${r.examDoctor}</td>
+            <td class="py-2.5 px-3 font-bold text-indigo-700">${r.supervisingDoctor}</td>
+            <td class="py-2.5 px-3 font-bold text-sky-700">${r.sessionDoctor}</td>
+            <td class="py-2.5 px-3 text-slate-700">${r.procedureType}</td>
+            <td class="py-2.5 px-3 text-slate-600">${r.age}</td>
+            <td class="py-2.5 px-3 text-slate-600">${r.sessionDate}</td>
+            <td class="py-2.5 px-3 font-bold text-slate-900">${r.price.toLocaleString('ar-EG')} ج.م</td>
+            <td class="py-2.5 px-3 text-slate-700">${r.paymentMethod}</td>
+            <td class="py-2.5 px-3">
+              <span class="px-2 py-0.5 rounded-full border text-[11px] font-bold ${statusBadge}">${r.status}</span>
+            </td>
+            <td class="py-2.5 px-3">${buildWhatsAppAction(r)}</td>
+            <td class="py-2.5 px-3 text-slate-600 max-w-xs truncate" title="${r.notes}">${r.notes || '-'}</td>
+            <td class="py-2.5 px-3 text-slate-500">${r.lastModified || '-'}</td>
+            <td class="py-2.5 px-3 text-slate-500 max-w-xs truncate" title="${r.adminNotes}">${r.adminNotes || '-'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function exportFilteredCSV() {
+      const headers = [
+        'كود الحجز', 'تاريخ التسجيل', 'اسم المريض', 'الهاتف', 'طبيب الكشف',
+        'الطبيب المشرف', 'طبيب الجلسات', 'نوع الإجراء', 'السن', 'موعد الجلسة',
+        'السعر', 'طريقة الدفع', 'حالة الحجز', 'ملاحظات الحالة', 'آخر تعديل', 'ملاحظات الأدمن'
+      ];
+      const rows = filteredRecords.map(r => [
+        r.code, r.regDate, r.patientName, r.phone, r.examDoctor,
+        r.supervisingDoctor, r.sessionDoctor, r.procedureType, r.age, r.sessionDate,
+        r.price, r.paymentMethod, r.status, r.notes, r.lastModified, r.adminNotes
+      ]);
+      const csv = '\uFEFF' + [headers, ...rows].map(row =>
+        row.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(',')
+      ).join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `physio-expert-report-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSheetData();
+      setInterval(loadSheetData, DEFAULT_CONFIG.autoRefreshSeconds * 1000);
+    });
+  </script>
+</body>
+</html>
